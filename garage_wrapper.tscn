@@ -1,0 +1,11 @@
+[gd_scene format=3 uid="uid://mgqf5dbw5n2s"]
+
+[ext_resource type="PackedScene" uid="uid://d2yw3c53iibr8" path="res://Blender/garage.glb" id="1_8r68w"]
+
+[node name="GarageWrapper" type="Node3D" unique_id=1745719070]
+
+[node name="garage" parent="." unique_id=2013032640 instance=ExtResource("1_8r68w")]
+transform = Transform3D(1, 0, -1.7484555e-07, 0, 1, 0, 1.7484555e-07, 0, 1, 3.4109373, 0, -0.7245425)
+
+[node name="FrontMarker" type="Marker3D" parent="." unique_id=295920128]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 0, 0, -1.4901161e-07)

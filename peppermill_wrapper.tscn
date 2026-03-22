@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://dijpvls45lyi3"]
+
+[ext_resource type="PackedScene" uid="uid://0lyejxwfe740" path="res://Blender/peppermill.glb" id="1_7h7w7"]
+
+[node name="PeppermillWrapper" type="Node3D" unique_id=539501516]
+
+[node name="peppermill" parent="." unique_id=1526173828 instance=ExtResource("1_7h7w7")]

@@ -1,5 +1,3 @@
-.import/
-.export/
-.export.cfg
-.mono/
-*.tmp
+# Godot 4+ specific ignores
+.godot/
+/android/

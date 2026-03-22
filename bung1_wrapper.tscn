@@ -1,0 +1,10 @@
+[gd_scene format=3 uid="uid://btqqrale7i4o7"]
+
+[ext_resource type="PackedScene" uid="uid://1uqcj40fsb4q" path="res://Blender/bung1.glb" id="1_1ghmu"]
+
+[node name="bung1_wrapper" type="Node3D" unique_id=698971579]
+
+[node name="FrontMarker" type="Marker3D" parent="." unique_id=995175139]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 71.54825, 0, 78.01392)
+
+[node name="bung1" parent="." unique_id=2059172082 instance=ExtResource("1_1ghmu")]

@@ -1,0 +1,11 @@
+[gd_scene format=3 uid="uid://bes62etnh2j3t"]
+
+[ext_resource type="PackedScene" uid="uid://d0f2q20oe1dwt" path="res://Blender/housev3.glb" id="1_1awjn"]
+
+[node name="Housev3Wrapper" type="Node3D" unique_id=1685127540]
+
+[node name="housev3" parent="." unique_id=1303648038 instance=ExtResource("1_1awjn")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -47, 0, -62)
+
+[node name="FrontMarker" type="Marker3D" parent="." unique_id=1071826600]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.4936714, 0, -4.1064377)

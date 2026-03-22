@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://bslq0xcr0upb0"]
+
+[ext_resource type="PackedScene" uid="uid://b8k0ymrol14tt" path="res://Blender/warehouse2.glb" id="1_cwjfi"]
+
+[node name="Warehouse2Wrapper" type="Node3D" unique_id=16348274]
+
+[node name="warehouse2" parent="." unique_id=869954255 instance=ExtResource("1_cwjfi")]

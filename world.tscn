@@ -1,0 +1,484 @@
+[gd_scene format=3 uid="uid://du0mljf7rmvlm"]
+
+[ext_resource type="Script" uid="uid://cisyta5d87iyv" path="res://map_loader.gd" id="1_fj7yv"]
+[ext_resource type="Script" uid="uid://bw68lwrxcyxiv" path="res://player.gd" id="2_tlwt5"]
+[ext_resource type="PackedScene" uid="uid://ckudcad2vp0s3" path="res://864ironstoneglb.glb" id="3_ic0uy"]
+[ext_resource type="Script" uid="uid://xq6jt8kes74q" path="res://minimap.gd" id="3_tlwt5"]
+[ext_resource type="Script" uid="uid://cxe7yucug654c" path="res://ChunkManager.gd" id="6_dwbse"]
+[ext_resource type="Script" uid="uid://c6moowktlle5j" path="res://WorldPainter.gd" id="6_pkg7o"]
+[ext_resource type="Script" uid="uid://bub55gvw4plrt" path="res://BushPainter.gd" id="7_pkg7o"]
+[ext_resource type="Script" uid="uid://q6awe3hsib5b" path="res://FencePainter.gd" id="8_gbfbk"]
+[ext_resource type="Script" uid="uid://bkl0523xe0h2p" path="res://WallPainter.gd" id="9_ioo17"]
+[ext_resource type="PackedScene" uid="uid://bdo43tjdfr3om" path="res://Blender/4HOUSEGROUP.glb" id="11_ic0uy"]
+[ext_resource type="Script" uid="uid://fsr1rpynbptr" path="res://BuildingModelPlacer.gd" id="11_k3n1d"]
+[ext_resource type="PackedScene" uid="uid://tq2ne1ms31xh" path="res://newhouse_wrapper.tscn" id="12_ikiii"]
+[ext_resource type="PackedScene" uid="uid://drdq45ywr0cjh" path="res://terrace_wrapper.tscn" id="13_udxuc"]
+[ext_resource type="PackedScene" uid="uid://l5dc6otxql6n" path="res://housev1_wrapper.tscn" id="15_bc84e"]
+[ext_resource type="PackedScene" uid="uid://3dqtapytkk4n" path="res://housev2_wrapper.tscn" id="16_wukud"]
+[ext_resource type="PackedScene" uid="uid://bes62etnh2j3t" path="res://housev3_wrapper.tscn" id="17_il2jm"]
+[ext_resource type="PackedScene" uid="uid://btqqrale7i4o7" path="res://bung1_wrapper.tscn" id="18_26xuy"]
+[ext_resource type="PackedScene" uid="uid://busg48t160ppp" path="res://housev4_wrapper.tscn" id="18_wjb0r"]
+[ext_resource type="PackedScene" uid="uid://cfmrn61582alp" path="res://bung2_wrapper.tscn" id="19_bc84e"]
+[ext_resource type="PackedScene" uid="uid://dwmvs02al66qf" path="res://bung3_wrapper.tscn" id="20_wukud"]
+[ext_resource type="PackedScene" uid="uid://mgqf5dbw5n2s" path="res://garage_wrapper.tscn" id="21_bc84e"]
+[ext_resource type="Script" uid="uid://bsoc5brqgo31" path="res://DayNightCycle.gd" id="22_wukud"]
+[ext_resource type="Texture2D" uid="uid://v41lchingjlv" path="res://Untitled_Artwork (1).png" id="23_il2jm"]
+[ext_resource type="Script" uid="uid://4agniryqxvje" path="res://factorymodelplacer.gd" id="24_wjb0r"]
+[ext_resource type="PackedScene" uid="uid://dijpvls45lyi3" path="res://peppermill_wrapper.tscn" id="25_4h6ng"]
+[ext_resource type="PackedScene" uid="uid://djo460smfi0xt" path="res://warehouse1_wrapper.tscn" id="26_o3ebs"]
+[ext_resource type="PackedScene" uid="uid://bslq0xcr0upb0" path="res://warehouse2_wrapper.tscn" id="27_k83mh"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_aqk2v"]
+radius = 0.3
+height = 1.2
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_wukud"]
+sun_angle_max = 0.0
+
+[sub_resource type="Sky" id="Sky_fj7yv"]
+sky_material = SubResource("ProceduralSkyMaterial_wukud")
+
+[sub_resource type="Environment" id="Environment_fj7yv"]
+background_mode = 2
+sky = SubResource("Sky_fj7yv")
+ambient_light_source = 3
+ambient_light_color = Color(0.9576358, 0.91780734, 0.8904719, 1)
+
+[sub_resource type="GDScript" id="GDScript_gbfbk"]
+script/source = "extends Node3D
+
+@export var brush_radius := 12.0
+@export var tree_density := 0.008
+@export var tree_spacing := 4.0
+
+var camera : Camera3D
+var painting := false
+
+var tool := \"trees\"
+
+@onready var player = get_node(\"../CharacterBody3D\")
+
+@onready var TreeGenerator = preload(\"res://TreeGenerator.gd\").new()
+@onready var TreeSaveManager = preload(\"res://TreeSaveManager.gd\").new()
+
+
+func _ready():
+
+	camera = get_viewport().get_camera_3d()
+
+
+func _input(event):
+
+	if event is InputEventKey and event.pressed:
+
+		if event.keycode == KEY_F1:
+			var node = get_node(\"../RoadsSmooth\")
+			node.visible = !node.visible
+
+		if event.keycode == KEY_F2:
+			var node = get_node(\"../RoadsSmooth\")
+			node.visible = !node.visible
+
+	# Disable painting controls if not flying
+	if !player.is_flying:
+		painting = false
+		return
+
+	if event is InputEventMouseButton:
+
+		# LEFT CLICK = PAINT
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			painting = event.pressed
+
+		# RIGHT CLICK = ERASE
+		if event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
+
+			var pos = get_crosshair_ground()
+
+			if pos != null:
+				erase_trees(pos)
+
+		# SCROLL UP
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
+			brush_radius += 2.0
+
+		# SCROLL DOWN
+		if event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			brush_radius = max(2.0, brush_radius - 2.0)
+
+
+func _process(delta):
+
+	if tool != \"trees\":
+		return
+
+	var pos = get_crosshair_ground()
+
+	if pos != null:
+
+		if painting:
+			paint_trees(pos)
+
+
+# -------------------------------------------------
+# Crosshair Raycast
+# -------------------------------------------------
+
+func get_crosshair_ground():
+
+	if camera == null:
+		return null
+
+	var viewport = get_viewport()
+	var center = viewport.get_visible_rect().size / 2
+
+	var ray_origin = camera.project_ray_origin(center)
+	var ray_dir = camera.project_ray_normal(center)
+
+	var space = get_world_3d().direct_space_state
+
+	var query = PhysicsRayQueryParameters3D.create(
+		ray_origin,
+		ray_origin + ray_dir * 2000
+	)
+
+	var result = space.intersect_ray(query)
+
+	if result:
+		return result.position
+
+	return null
+
+
+# -------------------------------------------------
+# Tree Painting
+# -------------------------------------------------
+
+func paint_trees(center):
+
+	var tree_container = get_parent().get_node_or_null(\"Trees\")
+
+	if tree_container == null:
+		return
+
+	var area = PI * brush_radius * brush_radius
+	var tree_count = int(area * tree_density)
+
+	var created := false
+
+	for i in range(tree_count):
+
+		var angle = randf() * TAU
+		var dist = sqrt(randf()) * brush_radius
+
+		var offset = Vector3(
+			cos(angle) * dist,
+			0,
+			sin(angle) * dist
+		)
+
+		var pos = center + offset
+
+		# TREE SPACING CHECK
+		var too_close := false
+
+		for tree in tree_container.get_children():
+
+			if tree.global_position.distance_to(pos) < tree_spacing:
+				too_close = true
+				break
+
+		if too_close:
+			continue
+
+		TreeGenerator.create_tree(
+			tree_container,
+			pos.x,
+			pos.z,
+			null
+		)
+
+		created = true
+
+	# Save trees after painting
+	if created:
+		TreeSaveManager.save_trees(tree_container)
+
+
+# -------------------------------------------------
+# Tree Eraser
+# -------------------------------------------------
+
+func erase_trees(center):
+
+	var tree_container = get_parent().get_node_or_null(\"Trees\")
+
+	if tree_container == null:
+		return
+
+	var erased := false
+
+	for tree in tree_container.get_children():
+
+		var dist = tree.global_position.distance_to(center)
+
+		if dist <= brush_radius:
+			tree.queue_free()
+			erased = true
+
+	# Save after deleting
+	if erased:
+		TreeSaveManager.save_trees(tree_container)
+"
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tlwt5"]
+bg_color = Color(0.22918466, 0.588197, 0.3556821, 1)
+
+[sub_resource type="GDScript" id="GDScript_ioo17"]
+script/source = "extends Node
+
+var active_tool = \"trees\"
+
+var tree_tool
+var grass_tool
+
+
+func _ready():
+
+	tree_tool = get_parent().get_node(\"ZonePainter\")
+	grass_tool = get_parent().get_node(\"GrassPainter\")
+
+	set_tool(\"trees\")
+
+
+func _input(event):
+
+	if event is InputEventKey and event.pressed:
+
+		if event.keycode == KEY_1:
+			set_tool(\"trees\")
+
+		if event.keycode == KEY_2:
+			set_tool(\"grass\")
+
+
+func set_tool(tool):
+
+	active_tool = tool
+
+	tree_tool.set_process_unhandled_input(tool == \"trees\")
+	grass_tool.set_process_unhandled_input(tool == \"grass\")
+
+	print(\"Active tool:\", tool)
+"
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wukud"]
+shading_mode = 0
+albedo_color = Color(2.762, 2.073, 0.246, 1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_il2jm"]
+material = SubResource("StandardMaterial3D_wukud")
+radius = 8.0
+height = 16.0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wjb0r"]
+albedo_color = Color(3.053098, 2.4141247, 0.39554894, 1)
+emission_enabled = true
+emission = Color(0.9933472, 0.9012053, 0.50441223, 1)
+emission_energy_multiplier = 3.0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_mc2jv"]
+shading_mode = 0
+albedo_color = Color(0.6426096, 0.92946875, 0.9827538, 1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_bo7i5"]
+material = SubResource("StandardMaterial3D_mc2jv")
+radius = 6.0
+height = 12.0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_4h6ng"]
+shading_mode = 0
+albedo_color = Color(0.7640214, 0.9480173, 0.9709566, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_bo7i5"]
+transparency = 1
+cull_mode = 1
+shading_mode = 0
+albedo_texture = ExtResource("23_il2jm")
+grow_amount = 2.409
+stencil_flags = 2
+
+[sub_resource type="SphereMesh" id="SphereMesh_4h6ng"]
+material = SubResource("StandardMaterial3D_bo7i5")
+
+[node name="World" type="Node3D" unique_id=956205320]
+script = ExtResource("1_fj7yv")
+
+[node name="CharacterBody3D" type="CharacterBody3D" parent="." unique_id=1265844622]
+script = ExtResource("2_tlwt5")
+
+[node name="Camera3D" type="Camera3D" parent="CharacterBody3D" unique_id=1307317315]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CharacterBody3D" unique_id=508854457]
+shape = SubResource("CapsuleShape3D_aqk2v")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1193163354]
+environment = SubResource("Environment_fj7yv")
+
+[node name="ZonePainter" type="Node3D" parent="." unique_id=409376156]
+script = SubResource("GDScript_gbfbk")
+
+[node name="Trees" type="Node3D" parent="." unique_id=1826360959]
+
+[node name="RoadsSmooth" type="Node3D" parent="." unique_id=1895356392]
+
+[node name="UI" type="CanvasLayer" parent="." unique_id=1458205158]
+
+[node name="Minimap" type="Panel" parent="UI" unique_id=1255905622]
+clip_contents = true
+custom_minimum_size = Vector2(220, 220)
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -40.0
+offset_bottom = 40.0
+grow_horizontal = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_tlwt5")
+script = ExtResource("3_tlwt5")
+
+[node name="RoadName" type="Label" parent="UI" unique_id=1559171369]
+offset_right = 20.0
+offset_bottom = 23.0
+theme_override_font_sizes/font_size = 24
+
+[node name="TextureRect" type="TextureRect" parent="UI" unique_id=950130028]
+custom_minimum_size = Vector2(8, 8)
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ChunkManager" type="Node3D" parent="." unique_id=1343313421 node_paths=PackedStringArray("player") groups=["chunk_manager"]]
+script = ExtResource("6_dwbse")
+player = NodePath("../CharacterBody3D")
+
+[node name="Chunks" type="Node3D" parent="." unique_id=1234946286]
+
+[node name="IndustrialBuildings" type="Node3D" parent="Chunks" unique_id=904407890]
+
+[node name="BuildingPlotGenerator" type="Node3D" parent="." unique_id=697196304 groups=["plot_generator"]]
+
+[node name="GrassPainter" type="Node3D" parent="." unique_id=192864115]
+
+[node name="ToolManager" type="Node3D" parent="." unique_id=1858077148]
+script = SubResource("GDScript_ioo17")
+
+[node name="WorldPainter" type="Node3D" parent="." unique_id=874309411]
+script = ExtResource("6_pkg7o")
+
+[node name="BushPainter" type="Node3D" parent="WorldPainter" unique_id=360793055]
+script = ExtResource("7_pkg7o")
+
+[node name="FencePainter" type="Node3D" parent="WorldPainter" unique_id=159986738]
+script = ExtResource("8_gbfbk")
+
+[node name="WallPainter" type="Node3D" parent="WorldPainter" unique_id=1420464669]
+script = ExtResource("9_ioo17")
+
+[node name="Crosshair" type="CanvasLayer" parent="." unique_id=2088692525]
+
+[node name="Label" type="Label" parent="Crosshair" unique_id=729618573]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -11.5
+offset_right = 20.0
+offset_bottom = 11.5
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 32
+text = "+"
+
+[node name="864ironstoneglb" parent="." unique_id=609536490 instance=ExtResource("3_ic0uy")]
+transform = Transform3D(-0.5, 0, 4.371139e-08, 0, 0.5, 0, -4.371139e-08, 0, -0.5, 8.743233, 0.4343419, 82.611984)
+
+[node name="4HOUSEGROUP" parent="." unique_id=696195746 instance=ExtResource("11_ic0uy")]
+transform = Transform3D(-0.39945182, 0, -0.02093442, 0, 0.4, 0, 0.02093442, 0, -0.39945182, 4.4734783, 0.37575912, 96.41926)
+
+[node name="buildingmodelplacer" type="Node3D" parent="." unique_id=383486402]
+script = ExtResource("11_k3n1d")
+foundations_parent_path = NodePath("../Chunks")
+spawned_models_parent_path = NodePath("../SpawnedBuildingModels")
+newhouse_wrapper = ExtResource("12_ikiii")
+terrace_wrapper = ExtResource("13_udxuc")
+housev1_wrapper = ExtResource("15_bc84e")
+housev2_wrapper = ExtResource("16_wukud")
+housev3_wrapper = ExtResource("17_il2jm")
+housev4_wrapper = ExtResource("18_wjb0r")
+bung1_wrapper = ExtResource("18_26xuy")
+bung2_wrapper = ExtResource("19_bc84e")
+bung3_wrapper = ExtResource("20_wukud")
+garage_wrapper = ExtResource("21_bc84e")
+
+[node name="SpawnedBuildingModels" type="Node3D" parent="." unique_id=547188364]
+
+[node name="Sun" type="DirectionalLight3D" parent="." unique_id=1437176363]
+light_color = Color(0.98311514, 1, 0.549321, 1)
+shadow_enabled = true
+
+[node name="Moon" type="DirectionalLight3D" parent="." unique_id=1807124895]
+light_color = Color(0.70797175, 0.99137455, 0.94902176, 1)
+shadow_enabled = true
+
+[node name="DayNightCycle" type="Node3D" parent="." unique_id=694808458]
+script = ExtResource("22_wukud")
+sun_path = NodePath("../Sun")
+moon_path = NodePath("../Moon")
+sun_visual_path = NodePath("../SunVisual")
+moon_visual_path = NodePath("../MoonVisual")
+world_environment_path = NodePath("../WorldEnvironment")
+star_dome_path = NodePath("../StarDome")
+
+[node name="SunVisual" type="Node3D" parent="." unique_id=374625382]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="SunVisual" unique_id=1077574476]
+mesh = SubResource("SphereMesh_il2jm")
+surface_material_override/0 = SubResource("StandardMaterial3D_wjb0r")
+
+[node name="MoonVisual" type="Node3D" parent="." unique_id=970610216]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="MoonVisual" unique_id=697684151]
+mesh = SubResource("SphereMesh_bo7i5")
+surface_material_override/0 = SubResource("StandardMaterial3D_4h6ng")
+
+[node name="SkyCenter" type="Node3D" parent="." unique_id=158461672]
+
+[node name="StarDome" type="Node3D" parent="." unique_id=120811556]
+transform = Transform3D(0.0076478045, -1.9661112, 0, 1.8032331, 0.008338597, 0, 0, 0, 2.1053197, 0, -287.35828, 0)
+visible = false
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="StarDome" unique_id=1892425907]
+transform = Transform3D(2000, 0, 0, 0, 2000, 0, 0, 0, 2000, 0, 0, 0)
+visible = false
+mesh = SubResource("SphereMesh_4h6ng")
+
+[node name="IndustrialModelPlacer" type="Node3D" parent="." unique_id=1279826945]
+script = ExtResource("24_wjb0r")
+industrial_parent_path = NodePath("../Chunks/IndustrialBuildings")
+spawned_models_parent_path = NodePath("../SpawnedFactoryModels")
+peppermill_wrapper = ExtResource("25_4h6ng")
+warehouse1_wrapper = ExtResource("26_o3ebs")
+warehouse2_wrapper = ExtResource("27_k83mh")
+
+[node name="SpawnedFactoryModels" type="Node" parent="." unique_id=551968943]

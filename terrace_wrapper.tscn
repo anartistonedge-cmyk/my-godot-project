@@ -1,0 +1,11 @@
+[gd_scene format=3 uid="uid://drdq45ywr0cjh"]
+
+[ext_resource type="PackedScene" uid="uid://bqhkpyn8r5p5s" path="res://Blender/terrace.glb" id="1_fbmhx"]
+
+[node name="TerraceWrapper" type="Node3D" unique_id=905573048]
+
+[node name="terrace" parent="." unique_id=1338531771 instance=ExtResource("1_fbmhx")]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, 0, 0)
+
+[node name="FrontMarker" type="Marker3D" parent="." unique_id=746319130]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.620636, 0, 14.126606)
