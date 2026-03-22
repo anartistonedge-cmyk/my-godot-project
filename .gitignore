@@ -1,3 +1,15 @@
-# Godot 4+ specific ignores
+# Godot 4 ignores
 .godot/
-/android/
+.import/
+.export/
+.export.cfg
+
+# Mono (if used)
+.mono/
+
+# Temp
+*.tmp
+
+# OS junk
+.DS_Store
+Thumbs.db
